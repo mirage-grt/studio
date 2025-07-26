@@ -60,28 +60,30 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (isSending && formDataToSend) {
-      const timer = setTimeout(() => {
-        const isSuccess = Math.random() > 0.3; // Simulate success/failure
-        if (isSuccess) {
-          toast({
-            title: "Success!",
-            description: `WiFi credentials sent to ${formDataToSend.device}.`,
-          });
-          form.reset();
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Failed to Send",
-            description: `Could not establish a connection to ${formDataToSend.device}.`,
-          });
-        }
-        setIsSending(false);
-        setFormDataToSend(null);
-      }, 2000);
-
-      return () => clearTimeout(timer);
+    if (!isSending || !formDataToSend) {
+      return;
     }
+
+    const timer = setTimeout(() => {
+      const isSuccess = Math.random() > 0.3; // Simulate success/failure
+      if (isSuccess) {
+        toast({
+          title: "Success!",
+          description: `WiFi credentials sent to ${formDataToSend.device}.`,
+        });
+        form.reset();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Failed to Send",
+          description: `Could not establish a connection to ${formDataToSend.device}.`,
+        });
+      }
+      setIsSending(false);
+      setFormDataToSend(null);
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, [isSending, formDataToSend, toast, form]);
 
 
@@ -109,8 +111,8 @@ export default function Home() {
   };
 
   const onSubmit = (values: FormData) => {
-    setIsSending(true);
     setFormDataToSend(values);
+    setIsSending(true);
   };
 
   return (
