@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -40,13 +40,17 @@ const formSchema = z.object({
   device: z.string().min(1, "Please select a device."),
 });
 
+type FormData = z.infer<typeof formSchema>;
+
 export default function Home() {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [isGeneratingPassword, setIsGeneratingPassword] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [formDataToSend, setFormDataToSend] = useState<FormData | null>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       ssid: "",
@@ -54,6 +58,32 @@ export default function Home() {
       device: "",
     },
   });
+
+  useEffect(() => {
+    if (isSending && formDataToSend) {
+      const timer = setTimeout(() => {
+        const isSuccess = Math.random() > 0.3; // Simulate success/failure
+        if (isSuccess) {
+          toast({
+            title: "Success!",
+            description: `WiFi credentials sent to ${formDataToSend.device}.`,
+          });
+          form.reset();
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Failed to Send",
+            description: `Could not establish a connection to ${formDataToSend.device}.`,
+          });
+        }
+        setIsSending(false);
+        setFormDataToSend(null);
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isSending, formDataToSend, toast, form]);
+
 
   const handleGeneratePassword = async () => {
     setIsGeneratingPassword(true);
@@ -78,27 +108,9 @@ export default function Home() {
     }
   };
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: FormData) => {
     setIsSending(true);
-
-    // Simulate sending data over Bluetooth
-    setTimeout(() => {
-      const isSuccess = Math.random() > 0.3; // Simulate success/failure
-      if (isSuccess) {
-        toast({
-          title: "Success!",
-          description: `WiFi credentials sent to ${values.device}.`,
-        });
-        form.reset();
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Failed to Send",
-          description: `Could not establish a connection to ${values.device}.`,
-        });
-      }
-      setIsSending(false);
-    }, 2000);
+    setFormDataToSend(values);
   };
 
   return (
